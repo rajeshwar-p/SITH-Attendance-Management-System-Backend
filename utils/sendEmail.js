@@ -10,7 +10,7 @@ export const sendEmail = async (to, otp) => {
   });
 
   await transporter.sendMail({
-    from: "SITH | Attendance Management System (AMS)",
+    from: `"SITH | Attendance Management System (AMS)" <${process.env.EMAIL_USER}>`,
     to,
     subject: "Password Reset OTP",
     html: `
