@@ -78,8 +78,12 @@ export const createAttendance = async (req, res) => {
 
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error(err);
-    res.status(500).json({ message: "Error saving attendance" });
+
+    console.error("CREATE ATTENDANCE ERROR:", err);
+
+    res.status(500).json({
+      message: err.message
+    });
   } finally {
     client.release();
   }
