@@ -67,7 +67,7 @@ export const createAttendance = async (req, res) => {
           r.status,
           r.status === "Present"
             ? null
-            : r.reason || "Reason Not Required"
+            : (r.reason?.trim() || "Reason Not Required")
         ]
       );
     }
