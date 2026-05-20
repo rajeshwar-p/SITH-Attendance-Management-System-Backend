@@ -8,6 +8,21 @@ export const createAttendance = async (req, res) => {
 
     await client.query("BEGIN");
 
+    if (
+      !batch_id ||
+      !date ||
+      !start_time ||
+      !end_time ||
+      !topic ||
+      !records ||
+      records.length === 0
+    ) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({
+        message: "All fields required"
+      });
+    }
+
     // 🔥 DUPLICATE CHECK
     const exists = await client.query(
       "SELECT * FROM attendance WHERE batch_id=$1 AND date=$2",
@@ -29,10 +44,31 @@ export const createAttendance = async (req, res) => {
 
     const attendanceId = attendance.rows[0].id;
 
+    // ✅ record validation
+    for (let r of records) {
+      if (!r.student_id || !r.status) {
+        await client.query("ROLLBACK");
+        return res.status(400).json({
+          message: "Invalid attendance record"
+        });
+      }
+    }
+
     for (let r of records) {
       await client.query(
-        "INSERT INTO attendance_details (attendance_id,student_id,status,reason) VALUES ($1,$2,$3,$4)",
-        [attendanceId, r.student_id, r.status, r.reason || null]
+        `
+        INSERT INTO attendance_details
+        (attendance_id, student_id, status, reason)
+        VALUES ($1,$2,$3,$4)
+        `,
+        [
+          attendanceId,
+          Number(r.student_id),
+          r.status,
+          r.status === "Present"
+            ? null
+            : r.reason || "Reason Not Required"
+        ]
       );
     }
 
